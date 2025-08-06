@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Scope OCR - Convert PDFs to Google Sheets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .file-upload {
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f9f9f9;
+        }
+        
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: #e8f0ff;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-info {
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .file-selected {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 4px solid #e57373;
+        }
+        
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .pricing-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            color: #333;
+        }
+        
+        .pricing-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        
+        .price {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .price-note {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-list {
+            text-align: left;
+            margin: 1rem 0;
+        }
+        
+        .feature-list li {
+            padding: 0.3rem 0;
+            color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-card {
+                padding: 1.5rem;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Insurance Scope OCR</h1>
+            <p>Convert your PDF scope documents into organized Google Sheets instantly</p>
+        </div>
+
+        <div class="form-card">
+            <h2 style="margin-bottom: 1.5rem; color: #333;">Process Your Insurance Scope Document</h2>
+            <p style="margin-bottom: 2rem; color: #666;">Complete the required fields and upload your PDF scope of work</p>
+            
+            <form id="insuranceForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="property_address">Project Address <span class="required">*</span></label>
+                    <input type="text" id="property_address" name="property_address" required 
+                           placeholder="Enter the project property address">
+                </div>
+
+                <div class="form-group">
+                    <label for="estimator_email">Email my Sheet to <span class="required">*</span></label>
+                    <input type="email" id="estimator_email" name="estimator_email" required 
+                           placeholder="Enter your email address">
+                </div>
+
+                <div class="form-group">
+                    <label for="pdf">Upload Your Scope Document <span class="required">*</span></label>
+                    <div class="file-upload" id="fileUpload">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text"><strong>Drag & drop your PDF here</strong></div>
+                        <div class="upload-text">or click to browse files</div>
+                        <div class="file-info">Maximum file size: <strong>100MB</strong></div>
+                        <input type="file" id="pdf" name="pdf" accept=".pdf" style="display: none;" required>
+                    </div>
+                    <div id="fileInfo" class="hidden" style="margin-top: 1rem; color: #666;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Processing Notes (Optional)</label>
+                    <textarea id="notes" name="notes" 
+                              placeholder="Any special instructions or notes for processing your scope document"></textarea>
+                </div>
+
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Process My Insurance Scope
+                </button>
+            </form>
+
+            <div id="errorMessage" class="error-message hidden"></div>
+            <div id="successMessage" class="success-message hidden"></div>
+        </div>
+
+        <div class="pricing-card">
+            <div class="pricing-title">Simple Pricing</div>
+            <div class="price">$199<span style="font-size: 1rem; font-weight: normal;">/month</span></div>
+            <div class="price-note">Unlimited scope document processing</div>
+            <ul class="feature-list">
+                <li>✓ Unlimited PDF processing</li>
+                <li>✓ Automatic Google Sheets conversion</li>
+                <li>✓ Email delivery of results</li>
+                <li>✓ Support for complex scope documents</li>
+                <li>✓ Up to 100MB file size support</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('insuranceForm');
+        const fileUpload = document.getElementById('fileUpload');
+        const fileInput = document.getElementById('pdf');
+        const fileInfo = document.getElementById('fileInfo');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Configuration - Update this URL when ngrok restarts
+        const WEBHOOK_URL = 'https://991024185ffc.ngrok-free.app/webhook/insurance-scope';
+
+        // Maximum file size in bytes (100MB = 100 * 1024 * 1024)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+        // File upload click handler
+        fileUpload.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop handlers
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            hideMessages();
+            
+            // Check file type
+            if (file.type !== 'application/pdf') {
+                showError('Please select a PDF file only.');
+                return;
+            }
+
+            // Check file size (100MB = 104,857,600 bytes)
+            if (file.size > MAX_FILE_SIZE) {
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                showError(`File size must be less than 100MB. Your file is ${fileSizeMB}MB.`);
+                return;
+            }
+
+            // File is valid
+            fileInput.files = createFileList(file);
+            fileUpload.classList.add('file-selected');
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            fileInfo.textContent = `Selected: ${file.name} (${fileSizeMB}MB)`;
+            fileInfo.classList.remove('hidden');
+        }
+
+        function createFileList(file) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            return dt.files;
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Form submission started');
+            hideMessages();
+
+            // Validate required fields
+            const propertyAddress = document.getElementById('property_address').value.trim();
+            const estimatorEmail = document.getElementById('estimator_email').value.trim();
+            
+            if (!propertyAddress) {
+                showError('Please enter the project address.');
+                return;
+            }
+            
+            if (!estimatorEmail) {
+                showError('Please enter your email address.');
+                return;
+            }
+
+            if (!fileInput.files.length) {
+                showError('Please select a PDF file to upload.');
+                return;
+            }
+
+            const formData = new FormData(form);
+            console.log('FormData created:', {
+                property_address: propertyAddress,
+                estimator_email: estimatorEmail,
+                file_name: fileInput.files[0].name,
+                file_size: fileInput.files[0].size
+            });
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            progressBar.style.display = 'block';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+            }, 500);
+
+            try {
+                console.log('=== FORM SUBMISSION STARTED ===');
+                console.log('Webhook URL:', WEBHOOK_URL);
+                console.log('Form data being sent:', {
+                    property_address: propertyAddress,
+                    estimator_email: estimatorEmail,
+                    file_name: fileInput.files[0].name,
+                    file_size: fileInput.files[0].size,
+                    file_type: fileInput.files[0].type
+                });
+
+                // Test network connectivity first
+                console.log('Testing network connectivity...');
+                try {
+                    const testResponse = await fetch('https://httpbin.org/get');
+                    console.log('Network test successful:', testResponse.ok);
+                } catch (networkError) {
+                    console.error('Network connectivity issue:', networkError);
+                    throw new Error('Network connectivity problem. Please check your internet connection.');
+                }
+
+                console.log('Sending request to webhook...');
+                
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData,
+                    // Add headers for better compatibility
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true',
+                        'User-Agent': 'InsuranceScopeOCR/1.0'
+                    }
+                });
+
+                console.log('=== RESPONSE RECEIVED ===');
+                console.log('Status:', response.status);
+                console.log('Status Text:', response.statusText);
+                console.log('Headers:', Object.fromEntries(response.headers.entries()));
+                
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+
+                // Get response text first to see what we actually received
+                const responseText = await response.text();
+                console.log('Raw response body:', responseText);
+
+                if (response.ok) {
+                    // Try to parse as JSON, but don't fail if it's not JSON
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('Parsed JSON response:', result);
+                    } catch (jsonError) {
+                        console.log('Response is not JSON, treating as success');
+                        result = { success: true, message: responseText };
+                    }
+                    
+                    showSuccess('Success! Your insurance scope document has been processed. Check your email for the Google Sheet.');
+                    form.reset();
+                    resetFileUpload();
+                } else {
+                    console.error('=== SERVER ERROR ===');
+                    console.error('Status:', response.status);
+                    console.error('Response:', responseText);
+                    throw new Error(`Server responded with ${response.status}: ${responseText.substring(0, 100)}...`);
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                console.error('Upload error:', error);
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showError('Cannot connect to the processing server. Please check if your ngrok tunnel is running and try again.');
+                } else {
+                    showError(`Error processing document: ${error.message}. Please try again.`);
+                }
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Process My Insurance Scope';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 2000);
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+            console.error('Error shown to user:', message);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            console.log('Success shown to user:', message);
+        }
+
+        function hideMessages() {
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        function resetFileUpload() {
+            fileUpload.classList.remove('file-selected');
+            fileInfo.classList.add('hidden');
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
